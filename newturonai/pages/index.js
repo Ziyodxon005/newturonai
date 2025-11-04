@@ -20,31 +20,33 @@ export default function Home() {
     if (!input.trim()) return;
 
     const userMessage = input;
-    setMessages([...messages, { sender: "user", text: userMessage }]);
+    setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
     setInput("");
     setTyping(true);
 
-    // **AI-lik tahlil qiluvchi funksiyasi**
+    // Tahlil qiluvchi funksiya: har qanday shakldagi savolni qamrab oladi
     const analyzeMessage = (msg) => {
       msg = msg.toLowerCase();
 
-      const keywords = [
-        { keys: ["nom", "ism"], answer: `🏫 Nomi: ${turonInfo.name}` },
-        { keys: ["kurs", "fanlar", "yo'nalish"], answer: `🎓 Kurslar: ${turonInfo.courses.join(", ")}` },
+      let answers = [];
+
+      const allKeywords = [
+        { keys: ["nom", "ism", "markaz"], answer: `🏫 Nomi: ${turonInfo.name}` },
+        { keys: ["kurs", "fan", "yo'nalish"], answer: `🎓 Kurslar: ${turonInfo.courses.join(", ")}` },
         { keys: ["manzil", "joylashuv", "address"], answer: `📍 Manzil: ${turonInfo.location}` },
         { keys: ["aloqa", "telefon", "kontakt"], answer: `📞 Kontakt: ${turonInfo.contact}` },
         { keys: ["vaqt", "soat", "ish vaqti"], answer: `🕘 Ish vaqti: ${turonInfo.hours}` },
         { keys: ["tavsif", "haqida", "ma'lumot"], answer: `ℹ️ ${turonInfo.description}` }
       ];
 
-      let answers = [];
-      keywords.forEach((k) => {
+      allKeywords.forEach((k) => {
         k.keys.forEach((key) => {
           if (msg.includes(key)) answers.push(k.answer);
         });
       });
 
       if (answers.length === 0) return "Uzr, men faqat Turon o'quv markazi haqida ma’lumot beraman.";
+
       return answers.join("\n");
     };
 
@@ -75,88 +77,102 @@ export default function Home() {
   }, [messages, typing]);
 
   return (
-    <div style={{ maxWidth: "600px", margin: "50px auto", fontFamily: "sans-serif" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Turon O'quv Markazi ChatBot</h1>
+    <div style={{ fontFamily: "Arial, sans-serif", background: "#f0f2f5", minHeight: "100vh", padding: "50px 20px" }}>
+      <h1 style={{ textAlign: "center", marginBottom: "30px", color: "#0d6efd" }}>
+        Turon O'quv Markazi ChatBot
+      </h1>
 
       <div
         style={{
-          border: "1px solid #ccc",
-          borderRadius: "12px",
-          padding: "15px",
-          height: "500px",
-          overflowY: "scroll",
-          background: "#f9f9f9",
-          boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
+          maxWidth: "600px",
+          margin: "0 auto",
+          borderRadius: "15px",
+          overflow: "hidden",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.15)"
         }}
       >
-        {messages.map((m, i) => (
-          <div
-            key={i}
+        <div
+          style={{
+            background: "#fff",
+            padding: "20px",
+            height: "500px",
+            overflowY: "scroll",
+            display: "flex",
+            flexDirection: "column"
+          }}
+        >
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              style={{
+                alignSelf: m.sender === "user" ? "flex-end" : "flex-start",
+                margin: "10px 0",
+                display: "flex"
+              }}
+            >
+              <div
+                style={{
+                  background: m.sender === "user" ? "#0d6efd" : "#e9ecef",
+                  color: m.sender === "user" ? "#fff" : "#000",
+                  padding: "12px 16px",
+                  borderRadius: "20px",
+                  maxWidth: "80%",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                  transition: "all 0.3s ease",
+                  whiteSpace: "pre-line"
+                }}
+              >
+                {m.text}
+              </div>
+            </div>
+          ))}
+          {typing && (
+            <div style={{ alignSelf: "flex-start", margin: "10px 0" }}>
+              <div
+                style={{
+                  background: "#e9ecef",
+                  padding: "12px 16px",
+                  borderRadius: "20px",
+                  fontStyle: "italic",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+                }}
+              >
+                Typing...
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
+
+        <div style={{ display: "flex", borderTop: "1px solid #dee2e6", background: "#fff" }}>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Savolingizni yozing..."
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
             style={{
-              textAlign: m.sender === "user" ? "right" : "left",
-              margin: "8px 0",
-              display: "flex",
-              justifyContent: m.sender === "user" ? "flex-end" : "flex-start"
+              flex: 1,
+              border: "none",
+              padding: "15px",
+              fontSize: "16px",
+              outline: "none"
+            }}
+          />
+          <button
+            onClick={handleSend}
+            style={{
+              background: "#0d6efd",
+              color: "#fff",
+              border: "none",
+              padding: "0 25px",
+              cursor: "pointer",
+              fontSize: "16px",
+              transition: "all 0.3s ease"
             }}
           >
-            <div
-              style={{
-                display: "inline-block",
-                padding: "12px",
-                borderRadius: "15px",
-                maxWidth: "80%",
-                background: m.sender === "user" ? "#d1e7dd" : "#e2e3e5",
-                whiteSpace: "pre-line",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                transition: "all 0.3s ease"
-              }}
-            >
-              {m.text}
-            </div>
-          </div>
-        ))}
-        {typing && (
-          <div style={{ margin: "8px 0", display: "flex", justifyContent: "flex-start" }}>
-            <div
-              style={{
-                display: "inline-block",
-                padding: "12px",
-                borderRadius: "15px",
-                background: "#e2e3e5",
-                fontStyle: "italic",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-              }}
-            >
-              Typing...
-            </div>
-          </div>
-        )}
-        <div ref={chatEndRef} />
-      </div>
-
-      <div style={{ display: "flex", marginTop: "15px" }}>
-        <input
-          style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #ccc" }}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Savolingizni yozing..."
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-        />
-        <button
-          style={{
-            padding: "12px 18px",
-            marginLeft: "10px",
-            borderRadius: "8px",
-            border: "none",
-            background: "#0d6efd",
-            color: "#fff",
-            cursor: "pointer",
-            transition: "all 0.3s ease"
-          }}
-          onClick={handleSend}
-        >
-          Yuborish
-        </button>
+            Yuborish
+          </button>
+        </div>
       </div>
     </div>
   );
